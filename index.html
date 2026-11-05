@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Estoque - The Burger</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #020617;
+      color: #f8fafc;
+    }
+  </style>
+
+  <!-- React e Babel para compilação direta no navegador -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- Elemento Raiz do React -->
+  <div id="root"></div>
+
+  <!-- Script Principal do Aplicativo React -->
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // Componentes de Ícones genéricos com FontAwesome
+    const Package = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-box ${className}`}></i>;
+    const Refrigerator = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-snowflake ${className}`}></i>;
+    const UtensilsCrossed = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-utensils ${className}`}></i>;
+    const ShoppingCart = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-cart-shopping ${className}`}></i>;
+    const PlusCircle = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-circle-plus ${className}`}></i>;
+    const Search = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-magnifying-glass ${className}`}></i>;
+    const Filter = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-filter ${className}`}></i>;
+    const AlertTriangle = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-triangle-exclamation ${className}`}></i>;
+    const CheckCircle2 = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-circle-check ${className}`}></i>;
+    const Copy = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-copy ${className}`}></i>;
+    const Check = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-check ${className}`}></i>;
+    const Store = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-store ${className}`}></i>;
+    const RefreshCw = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-rotate ${className}`}></i>;
+    const Building2 = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-building ${className}`}></i>;
+    const Trash2 = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-trash-can ${className}`}></i>;
+    const Edit2 = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-pen-to-square ${className}`}></i>;
+    const Save = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-floppy-disk ${className}`}></i>;
+    const X = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-xmark ${className}`}></i>;
+    const Settings = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-gear ${className}`}></i>;
+    const ImageIcon = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-image ${className}`}></i>;
+    const UserPlus = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-user-plus ${className}`}></i>;
+    const Users = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-users ${className}`}></i>;
+    const Layers = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-layer-group ${className}`}></i>;
+    const Phone = ({ className = "w-4 h-4" }) => <i className={`fa-brands fa-whatsapp ${className}`}></i>;
+    const Upload = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-upload ${className}`}></i>;
+    const ShieldAlert = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-shield-cat ${className}`}></i>;
+    const Lock = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-lock ${className}`}></i>;
+    const LogOut = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-right-from-bracket ${className}`}></i>;
+    const KeyRound = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-key ${className}`}></i>;
+    const ShieldCheck = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-shield-halved ${className}`}></i>;
+    const ToggleLeft = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-toggle-off ${className}`}></i>;
+    const ToggleRight = ({ className = "w-4 h-4" }) => <i className={`fa-solid fa-toggle-on ${className}`}></i>;
+
+    // Dados iniciais importados das planilhas
+    const INITIAL_PRODUCTS = [
+      // SALÃO (BEBIDAS)
+      { id: '1', name: 'AGUA SEM GAS', minEstq: 12, fridge: 24, deposit: 30, supplier: 'Distribuidora Água', praca: 'salao', fardo: 12 },
+      { id: '2', name: 'AGUA COM GÁS', minEstq: 6, fridge: 8, deposit: 6, supplier: 'Distribuidora Água', praca: 'salao', fardo: 12 },
+      { id: '3', name: 'GUARANA ANTARTICA 600 ML', minEstq: 6, fridge: 2, deposit: 0, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '4', name: 'CINI ABACAXI 500 ML', minEstq: 6, fridge: 6, deposit: 6, supplier: 'Cini', praca: 'salao', fardo: 12 },
+      { id: '5', name: 'CINI FRAMBOESA 500 ML', minEstq: 6, fridge: 5, deposit: 6, supplier: 'Cini', praca: 'salao', fardo: 12 },
+      { id: '6', name: 'COCA COLA 600 ML', minEstq: 18, fridge: 6, deposit: 5, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '7', name: 'COCA COLA ZERO 600 ML', minEstq: 12, fridge: 4, deposit: 3, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '8', name: 'GUARANA ANTARTICA ZERO LATA 350 ML', minEstq: 6, fridge: 6, deposit: 4, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '9', name: 'GUARANA ANTARTICA LATA 350 ML', minEstq: 6, fridge: 8, deposit: 6, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '10', name: 'TONICA SCHWEPPES LATA 350 ML', minEstq: 3, fridge: 2, deposit: 0, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '11', name: 'FANTA UVA LATA 350 ML', minEstq: 6, fridge: 4, deposit: 4, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '12', name: 'FANTA LARANJA LATA 350 ML', minEstq: 6, fridge: 4, deposit: 4, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '13', name: 'SPRITE LATA 350 ML', minEstq: 6, fridge: 2, deposit: 2, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '14', name: 'COCA COLA LATA 350 ML', minEstq: 24, fridge: 12, deposit: 5, supplier: 'Coca-Cola', praca: 'salao', fardo: 12 },
+      { id: '15', name: 'COCA COLA ZERO LATA 350 ML', minEstq: 18, fridge: 10, deposit: 7, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '16', name: 'GUARANA ANTARTICA 200 ML', minEstq: 8, fridge: 8, deposit: 5, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '17', name: 'GUARANA ANTARTICA ZERO 200 ML', minEstq: 8, fridge: 4, deposit: 2, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '18', name: 'COCA COLA ZERO 200 ML', minEstq: 12, fridge: 8, deposit: 7, supplier: 'Coca-Cola', praca: 'salao', fardo: 12 },
+      { id: '19', name: 'COCA COLA 200 ML', minEstq: 18, fridge: 6, deposit: 6, supplier: 'Coca-Cola', praca: 'salao', fardo: 12 },
+      { id: '20', name: 'SUCO DEL VALLE UVA', minEstq: 4, fridge: 5, deposit: 4, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '21', name: 'SUCO DEL VALLE PESSEGO', minEstq: 4, fridge: 4, deposit: 4, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '22', name: 'SUCO DEL VALLE GOIABA', minEstq: 4, fridge: 3, deposit: 2, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '23', name: 'COCA COLA 2 LITROS', minEstq: 18, fridge: 8, deposit: 8, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '24', name: 'CINI ABACAXI 2 LITROS', minEstq: 18, fridge: 10, deposit: 11, supplier: 'Cini', praca: 'salao', fardo: 6 },
+      { id: '25', name: 'CINI GUARANA 2 LITROS', minEstq: 12, fridge: 5, deposit: 4, supplier: 'Cini', praca: 'salao', fardo: 6 },
+      { id: '26', name: 'CINI FRAMBOESA 2 LITROS', minEstq: 12, fridge: 8, deposit: 7, supplier: 'Cini', praca: 'salao', fardo: 6 },
+      { id: '27', name: 'GUARANA ANTARTICA 2L', minEstq: 4, fridge: 4, deposit: 5, supplier: 'Ambev', praca: 'salao', fardo: 6 },
+      { id: '28', name: 'COCA COLA ZERO 2 LITROS', minEstq: 12, fridge: 8, deposit: 10, supplier: 'Coca-Cola', praca: 'salao', fardo: 6 },
+      { id: '29', name: 'ORIGINAL 600 ML', minEstq: 6, fridge: 12, deposit: 18, supplier: 'Ambev', praca: 'salao', fardo: 24 },
+      { id: '30', name: 'HEINEKEN 600', minEstq: 6, fridge: 10, deposit: 13, supplier: 'Heineken', praca: 'salao', fardo: 24 },
+      { id: '31', name: 'BRAHMA 600 ML', minEstq: 6, fridge: 8, deposit: 8, supplier: 'Ambev', praca: 'salao', fardo: 24 },
+      { id: '32', name: 'AMSTEL 600', minEstq: 6, fridge: 10, deposit: 15, supplier: 'Heineken', praca: 'salao', fardo: 24 },
+      { id: '33', name: 'BRAHMA LATA 350 ML', minEstq: 12, fridge: 8, deposit: 5, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '34', name: 'ORIGINAL 350 ML', minEstq: 12, fridge: 8, deposit: 7, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '35', name: 'BUDWEISER LATA 350 ML', minEstq: 12, fridge: 10, deposit: 8, supplier: 'Ambev', praca: 'salao', fardo: 12 },
+      { id: '36', name: 'AMSTEL LATA 350 ML', minEstq: 12, fridge: 8, deposit: 9, supplier: 'Heineken', praca: 'salao', fardo: 12 },
+      { id: '37', name: 'HEINEKEN LATA 350 ML', minEstq: 12, fridge: 10, deposit: 9, supplier: 'Heineken', praca: 'salao', fardo: 12 },
+
+      // COZINHA (INSUMOS)
+      { id: '101', name: 'Barbecue', minEstq: 2, currentQty: 3, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '102', name: 'Batata Palha', minEstq: 4, currentQty: 2, supplier: 'Distribuidora Central', praca: 'cozinha', fardo: 1 },
+      { id: '103', name: 'Bolinho de Aipim Rec. c/ Linguiça Blumenau', minEstq: 6, currentQty: 6, supplier: 'Salgados & Cia', praca: 'cozinha', fardo: 1 },
+      { id: '104', name: 'Calabresa', minEstq: 1, currentQty: 0, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '105', name: 'Camarão', minEstq: 4, currentQty: 3, supplier: 'Mariscos do Vale', praca: 'cozinha', fardo: 1 },
+      { id: '106', name: 'Cebola Crispy', minEstq: 1, currentQty: 0, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '107', name: 'Cubinhos de Aipim', minEstq: 2, currentQty: 1, supplier: 'Salgados & Cia', praca: 'cozinha', fardo: 1 },
+      { id: '108', name: 'Dadinhos de batata recheado com queijo', minEstq: 2, currentQty: 1, supplier: 'Salgados & Cia', praca: 'cozinha', fardo: 1 },
+      { id: '109', name: 'Frango coxinha', minEstq: 5, currentQty: 10, supplier: 'Bem Mais Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '110', name: 'Fritas', minEstq: 18, currentQty: 13, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '111', name: 'Hamburguer', minEstq: 10, currentQty: 4, supplier: 'Bem Mais Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '112', name: 'Isca de Peixe', minEstq: 5, currentQty: 2, supplier: 'Mariscos do Vale', praca: 'cozinha', fardo: 1 },
+      { id: '113', name: 'Pão', minEstq: 90, currentQty: 32, supplier: 'Padaria Modelo', praca: 'cozinha', fardo: 1 },
+      { id: '114', name: 'Pão Crocante', minEstq: 8, currentQty: 4, supplier: 'Padaria Modelo', praca: 'cozinha', fardo: 1 },
+      { id: '115', name: 'Picles', minEstq: 6, currentQty: 2, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '116', name: 'Polenta Palito 500g', minEstq: 4, currentQty: 4, supplier: 'Salgados & Cia', praca: 'cozinha', fardo: 1 },
+      { id: '117', name: 'Presunto', minEstq: 8, currentQty: 0, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '118', name: 'Queijo Mussarela', minEstq: 1, currentQty: 0, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 },
+      { id: '119', name: 'Ketchup Sache', minEstq: 3, currentQty: 1, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '120', name: 'Maionese Sache', minEstq: 3, currentQty: 2, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '121', name: 'Mostarda Sache', minEstq: 3, currentQty: 2, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '122', name: 'Disco de queijo', minEstq: 1, currentQty: 1, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 },
+      { id: '123', name: 'Polpa Morango', minEstq: 10, currentQty: 5, supplier: 'Polpas Naturais', praca: 'cozinha', fardo: 1 },
+      { id: '124', name: 'Polpa Abacaxi', minEstq: 10, currentQty: 10, supplier: 'Polpas Naturais', praca: 'cozinha', fardo: 1 },
+      { id: '125', name: 'Polpa Maracuja', minEstq: 20, currentQty: 24, supplier: 'Polpas Naturais', praca: 'cozinha', fardo: 1 },
+      { id: '126', name: 'Polpa Acerola', minEstq: 10, currentQty: 10, supplier: 'Polpas Naturais', praca: 'cozinha', fardo: 1 },
+      { id: '127', name: 'Cheddar', minEstq: 5, currentQty: 0, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 },
+      { id: '128', name: 'Queijo cheddar', minEstq: 4, currentQty: 0, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 },
+      { id: '129', name: 'Açaí', minEstq: 1, currentQty: 1, supplier: 'Polpas Naturais', praca: 'cozinha', fardo: 1 },
+      { id: '130', name: 'Costela desfia', minEstq: 1, currentQty: 1, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '131', name: 'Manteiga', minEstq: 1, currentQty: 0, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 },
+      { id: '132', name: 'Oleo da Algodão', minEstq: 1, currentQty: 0, supplier: 'Distribuidora Central', praca: 'cozinha', fardo: 1 },
+      { id: '133', name: 'Frango Empanado', minEstq: 2, currentQty: 1, supplier: 'Bem Mais Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '134', name: 'Chicken', minEstq: 1, currentQty: 1, supplier: 'Bem Mais Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '135', name: 'Carne Seca', minEstq: 1, currentQty: 2, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '136', name: 'Bacon Manta', minEstq: 0.4, currentQty: 1, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '137', name: 'Pão Smash', minEstq: 3, currentQty: 3, supplier: 'Padaria Modelo', praca: 'cozinha', fardo: 1 },
+      { id: '138', name: 'Aneis de Cebola', minEstq: 4, currentQty: 3, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '139', name: 'Batata Rústica', minEstq: 4, currentQty: 5, supplier: 'SOS Alimentos', praca: 'cozinha', fardo: 1 },
+      { id: '140', name: 'Bacon Fatiado', minEstq: 6, currentQty: 5, supplier: 'Frigorifico Central', praca: 'cozinha', fardo: 1 },
+      { id: '141', name: 'Cream Cheese', minEstq: 1, currentQty: 0, supplier: 'Laticínio Real', praca: 'cozinha', fardo: 1 }
+    ];
+
+    const INITIAL_PRACAS = [
+      { id: 'salao', name: 'Salão (Bebidas)', icon: 'Refrigerator', active: true },
+      { id: 'cozinha', name: 'Cozinha (Insumos)', icon: 'UtensilsCrossed', active: true }
+    ];
+
+    const INITIAL_SUPPLIERS = [
+      { id: '1', name: 'Ambev', phone: '41999990001', category: 'Bebidas' },
+      { id: '2', name: 'Coca-Cola', phone: '41999990002', category: 'Bebidas' },
+      { id: '3', name: 'Cini', phone: '41999990003', category: 'Refrigerantes' },
+      { id: '4', name: 'Heineken', phone: '41999990004', category: 'Cervejas' },
+      { id: '5', name: 'SOS Alimentos', phone: '41999990005', category: 'Molhos & Fritos' },
+      { id: '6', name: 'Bem Mais Alimentos', phone: '41999990006', category: 'Carnes & Hambúrgueres' },
+      { id: '7', name: 'Padaria Modelo', phone: '41999990007', category: 'Pães' },
+      { id: '8', name: 'Frigorifico Central', phone: '41999990008', category: 'Frios & Embutidos' },
+      { id: '9', name: 'Laticínio Real', phone: '41999990009', category: 'Queijos' }
+    ];
+
+    const INITIAL_USERS = [
+      { id: 'super-adm', username: 'Mario Jr', password: '123', name: 'Mario Jr (Super ADM)', whatsapp: '41999999999', role: 'SUPER_ADM', storeName: 'Todas as Lojas', pracaAccess: 'ALL', status: 'Ativo' },
+      { id: 'adm-loja', username: 'admloja', password: '123', name: 'Gerente da Loja', whatsapp: '41988887777', role: 'ADM_LOJA', storeName: 'THE BURGER - Matriz', pracaAccess: 'ALL', status: 'Ativo' },
+      { id: 'joao-cozinha', username: 'cozinha', password: '123', name: 'João Cozinha', whatsapp: '41988886666', role: 'COZINHA', storeName: 'THE BURGER - Matriz', pracaAccess: 'cozinha', status: 'Ativo' },
+      { id: 'maria-salao', username: 'salao', password: '123', name: 'Maria Salão', whatsapp: '41988885555', role: 'SALAO', storeName: 'THE BURGER - Matriz', pracaAccess: 'salao', status: 'Ativo' }
+    ];
+
+    const INITIAL_STORES = [
+      { id: '1', name: 'THE BURGER - Matriz', cnpj: '12.345.678/0001-90', whatsapp: '41999887766', address: 'Rua Principal, 100 - Centro' },
+      { id: '2', name: 'THE BURGER - Filial Shopping', cnpj: '12.345.678/0002-71', whatsapp: '41999887777', address: 'Av. Brasil, 500 - Loja 12' }
+    ];
+
+    const INITIAL_STORE_INFO = {
+      name: 'THE BURGER - Matriz',
+      cnpj: '12.345.678/0001-90',
+      whatsapp: '41999887766',
+      address: 'Rua Principal, 100 - Centro',
+      logoUrl: null
+    };
+
+    function App() {
+      const [products, setProducts] = useState(() => {
+        const saved = localStorage.getItem('tb_products');
+        return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+      });
+
+      const [pracas, setPracas] = useState(() => {
+        const saved = localStorage.getItem('tb_pracas');
+        return saved ? JSON.parse(saved) : INITIAL_PRACAS;
+      });
+
+      const [suppliers, setSuppliers] = useState(() => {
+        const saved = localStorage.getItem('tb_suppliers');
+        return saved ? JSON.parse(saved) : INITIAL_SUPPLIERS;
+      });
+
+      const [users, setUsers] = useState(() => {
+        const saved = localStorage.getItem('tb_users');
+        return saved ? JSON.parse(saved) : INITIAL_USERS;
+      });
+
+      const [stores, setStores] = useState(() => {
+        const saved = localStorage.getItem('tb_stores');
+        return saved ? JSON.parse(saved) : INITIAL_STORES;
+      });
+
+      const [storeInfo, setStoreInfo] = useState(() => {
+        const saved = localStorage.getItem('tb_storeInfo');
+        return saved ? JSON.parse(saved) : INITIAL_STORE_INFO;
+      });
+
+      const [sessionUser, setSessionUser] = useState(() => {
+        const saved = localStorage.getItem('tb_sessionUser');
+        return saved ? JSON.parse(saved) : null;
+      });
+
+      const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+      const [loginError, setLoginError] = useState('');
+      const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+      const [forgotUsername, setForgotUsername] = useState('');
+      const [forgotSuccessMessage, setForgotSuccessMessage] = useState('');
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setLoginError('');
+
+        const found = users.find(
+          u => u.username.toLowerCase() === loginForm.username.trim().toLowerCase() && 
+               u.password === loginForm.password &&
+               u.status === 'Ativo'
+        );
+
+        if (found) {
+          setSessionUser(found);
+          localStorage.setItem('tb_sessionUser', JSON.stringify(found));
+          setLoginForm({ username: '', password: '' });
+        } else {
+          setLoginError('Usuário ou senha incorretos, ou cadastro inativo.');
+        }
+      };
+
+      const handleLogout = () => {
+        setSessionUser(null);
+        localStorage.removeItem('tb_sessionUser');
+      };
+
+      const isSuperAdmin = sessionUser?.role === 'SUPER_ADM';
+      const isStoreAdmin = sessionUser?.role === 'ADM_LOJA' || isSuperAdmin;
+      const isRestrictedUser = !isStoreAdmin;
+
+      const [activeTab, setActiveTab] = useState('salao');
+      const [searchTerm, setSearchTerm] = useState('');
+      const [selectedSupplier, setSelectedSupplier] = useState('ALL');
+      const [copiedAlert, setCopiedAlert] = useState(false);
+
+      useEffect(() => {
+        if (sessionUser) {
+          if (isRestrictedUser) {
+            if (sessionUser.pracaAccess === 'salao') {
+              setActiveTab('salao');
+            } else if (sessionUser.pracaAccess === 'cozinha') {
+              setActiveTab('cozinha');
+            } else {
+              setActiveTab('cadastrar');
+            }
+          }
+        }
+      }, [sessionUser, isRestrictedUser]);
+
+      useEffect(() => { localStorage.setItem('tb_products', JSON.stringify(products)); }, [products]);
+      useEffect(() => { localStorage.setItem('tb_pracas', JSON.stringify(pracas)); }, [pracas]);
+      useEffect(() => { localStorage.setItem('tb_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
+      useEffect(() => { localStorage.setItem('tb_users', JSON.stringify(users)); }, [users]);
+      useEffect(() => { localStorage.setItem('tb_stores', JSON.stringify(stores)); }, [stores]);
+      useEffect(() => { localStorage.setItem('tb_storeInfo', JSON.stringify(storeInfo)); }, [storeInfo]);
+
+      const [newUser, setNewUser] = useState({ 
+        username: '', password: '', name: '', whatsapp: '', role: 'COZINHA', storeName: 'THE BURGER - Matriz', pracaAccess: 'cozinha', status: 'Ativo' 
+      });
+
+      const [newPraca, setNewPraca] = useState({ name: '', active: true });
+      const [newSupplier, setNewSupplier] = useState({ name: '', phone: '', category: '' });
+
+      const [newProduct, setNewProduct] = useState({
+        name: '', minEstq: '', supplier: '', praca: 'salao', fardo: '12', fridge: '0', deposit: '0', currentQty: '0'
+      });
+
+      useEffect(() => {
+        if (sessionUser && isRestrictedUser) {
+          setNewProduct(prev => ({ ...prev, praca: sessionUser.pracaAccess }));
+        }
+      }, [sessionUser, isRestrictedUser]);
+
+      const [editingId, setEditingId] = useState(null);
+      const [editForm, setEditForm] = useState(null);
+
+      const handleLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            alert('A imagem é muito grande! Escolha um arquivo de até 2MB.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setStoreInfo(prev => ({ ...prev, logoUrl: reader.result }));
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleRemoveLogo = () => {
+        setStoreInfo(prev => ({ ...prev, logoUrl: null }));
+      };
+
+      const handleAddUser = (e) => {
+        e.preventDefault();
+        if (!newUser.name || !newUser.username || !newUser.password) {
+          alert('Preencha os campos obrigatórios: Nome, Usuário e Senha.');
+          return;
+        }
+
+        if (users.some(u => u.username.toLowerCase() === newUser.username.trim().toLowerCase())) {
+          alert('Este nome de usuário já está cadastrado!');
+          return;
+        }
+
+        setUsers(prev => [...prev, { id: Date.now().toString(), ...newUser, username: newUser.username.trim().toLowerCase() }]);
+        setNewUser({ username: '', password: '', name: '', whatsapp: '', role: 'COZINHA', storeName: storeInfo.name, pracaAccess: 'cozinha', status: 'Ativo' });
+      };
+
+      const handleDeleteUser = (id) => {
+        if (id === 'super-adm') {
+          alert('A conta do Super Administrador não pode ser deletada.');
+          return;
+        }
+        setUsers(prev => prev.filter(u => u.id !== id));
+        if (sessionUser?.id === id) handleLogout();
+      };
+
+      const toggleUserStatus = (id) => {
+        if (id === 'super-adm') return;
+        setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === 'Ativo' ? 'Inativo' : 'Ativo' } : u));
+      };
+
+      const handleAddPraca = (e) => {
+        e.preventDefault();
+        if (!newPraca.name) return;
+        const id = newPraca.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+        setPracas(prev => [...prev, { id, name: newPraca.name, icon: 'Layers', active: true }]);
+        setNewPraca({ name: '', active: true });
+      };
+
+      const togglePracaActive = (id) => {
+        setPracas(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p));
+      };
+
+      const handleDeletePraca = (id) => {
+        if (id === 'salao' || id === 'cozinha') {
+          alert('As praças padrão "Salão" e "Cozinha" não podem ser removidas.');
+          return;
+        }
+        setPracas(prev => prev.filter(p => p.id !== id));
+      };
+
+      const handleAddSupplier = (e) => {
+        e.preventDefault();
+        if (!newSupplier.name) return;
+        setSuppliers(prev => [...prev, { id: Date.now().toString(), ...newSupplier }]);
+        setNewSupplier({ name: '', phone: '', category: '' });
+      };
+
+      const handleDeleteSupplier = (id) => {
+        setSuppliers(prev => prev.filter(s => s.id !== id));
+      };
+
+      const updateProductQty = (id, field, value) => {
+        const numericVal = Math.max(0, parseFloat(value) || 0);
+        setProducts(prev => prev.map(p => p.id === id ? { ...p, [field]: numericVal } : p));
+      };
+
+      const handleAddProduct = (e) => {
+        e.preventDefault();
+        if (!newProduct.name || !newProduct.supplier) return;
+
+        const targetPraca = isStoreAdmin ? newProduct.praca : sessionUser.pracaAccess;
+        const pracaObj = pracas.find(p => p.id === targetPraca);
+
+        if (pracaObj && !pracaObj.active) {
+          alert(`A praça "${pracaObj.name}" está temporariamente desativada pelo administrador.`);
+          return;
+        }
+
+        const minEstq = parseFloat(newProduct.minEstq) || 0;
+        const fardo = parseInt(newProduct.fardo) || 1;
+
+        const newItem = {
+          id: Date.now().toString(),
+          name: newProduct.name.toUpperCase(),
+          minEstq,
+          supplier: newProduct.supplier,
+          praca: targetPraca,
+          fardo: targetPraca === 'salao' ? fardo : 1,
+          ...(targetPraca === 'salao' 
+            ? { fridge: parseFloat(newProduct.fridge) || 0, deposit: parseFloat(newProduct.deposit) || 0 }
+            : { currentQty: parseFloat(newProduct.currentQty) || 0 }
+          )
+        };
+
+        setProducts(prev => [...prev, newItem]);
+        setNewProduct({ name: '', minEstq: '', supplier: '', praca: targetPraca, fardo: '12', fridge: '0', deposit: '0', currentQty: '0' });
+        setActiveTab(targetPraca);
+      };
+
+      const handleDeleteProduct = (id) => {
+        setProducts(prev => prev.filter(p => p.id !== id));
+      };
+
+      const startEditing = (product) => {
+        setEditingId(product.id);
+        setEditForm({ ...product });
+      };
+
+      const saveEditing = () => {
+        setProducts(prev => prev.map(p => p.id === editingId ? editForm : p));
+        setEditingId(null);
+        setEditForm(null);
+      };
+
+      const filteredProducts = useMemo(() => {
+        return products.filter(p => {
+          if (activeTab === 'salao' && p.praca !== 'salao') return false;
+          if (activeTab === 'cozinha' && p.praca !== 'cozinha') return false;
+
+          const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                p.supplier.toLowerCase().includes(searchTerm.toLowerCase());
+          const matchesSupplier = selectedSupplier === 'ALL' || p.supplier === selectedSupplier;
+
+          return matchesSearch && matchesSupplier;
+        });
+      }, [products, activeTab, searchTerm, selectedSupplier]);
+
+      const missingProducts = useMemo(() => {
+        return products.map(p => {
+          const total = p.praca === 'salao' ? (p.fridge + p.deposit) : p.currentQty;
+          const falta = p.minEstq - total;
+          const fardosFalta = p.fardo > 0 ? Math.ceil(falta / p.fardo) : 0;
+          return { ...p, total, falta, fardosFalta };
+        }).filter(p => p.falta > 0);
+      }, [products]);
+
+      const missingBySupplier = useMemo(() => {
+        const groups = {};
+        missingProducts.forEach(p => {
+          if (!groups[p.supplier]) groups[p.supplier] = [];
+          groups[p.supplier].push(p);
+        });
+        return groups;
+      }, [missingProducts]);
+
+      const copyShoppingList = () => {
+        let text = `📋 *PEDIDO DE COMPRAS - ${storeInfo.name.toUpperCase()}*\n`;
+        text += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+
+        Object.keys(missingBySupplier).forEach(supplier => {
+          const foundSupplier = suppliers.find(s => s.name.toLowerCase() === supplier.toLowerCase());
+          const wpp = foundSupplier?.phone ? ` (Wpp: ${foundSupplier.phone})` : '';
+          text += `🏢 *FORNECEDOR: ${supplier.toUpperCase()}*${wpp}\n`;
+          missingBySupplier[supplier].forEach(item => {
+            if (item.praca === 'salao') {
+              text += ` • ${item.name}: Falta ${item.falta} un (${item.fardosFalta} fardos c/ ${item.fardo})\n`;
+            } else {
+              text += ` • ${item.name}: Falta ${item.falta} un\n`;
+            }
+          });
+          text += `\n`;
+        });
+
+        navigator.clipboard.writeText(text);
+        setCopiedAlert(true);
+        setTimeout(() => setCopiedAlert(false), 3000);
+      };
+
+      const totalSalaoFalta = useMemo(() => {
+        return products.filter(p => p.praca === 'salao').reduce((acc, p) => {
+          const total = p.fridge + p.deposit;
+          return acc + (p.minEstq > total ? (p.minEstq - total) : 0);
+        }, 0);
+      }, [products]);
+
+      const totalCozinhaFalta = useMemo(() => {
+        return products.filter(p => p.praca === 'cozinha').reduce((acc, p) => {
+          return acc + (p.minEstq > p.currentQty ? (p.minEstq - p.currentQty) : 0);
+        }, 0);
+      }, [products]);
+
+      if (!sessionUser) {
+        return (
+          <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-cyan-500 to-amber-500"></div>
+              
+              <div className="text-center mb-8">
+                {storeInfo.logoUrl ? (
+                  <img src={storeInfo.logoUrl} alt="Logo" className="w-20 h-20 mx-auto rounded-2xl object-cover mb-3 border-2 border-amber-500/30" />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-amber-500/20">
+                    <Store className="w-9 h-9 font-bold" />
+                  </div>
+                )}
+                <h1 className="text-2xl font-black text-white tracking-tight">{storeInfo.name}</h1>
+                <p className="text-xs text-slate-400 mt-1">Sistema de Controle de Estoque & Praças</p>
+              </div>
+
+              {loginError && (
+                <div className="mb-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs p-3 rounded-xl flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Usuário</label>
+                  <div className="relative">
+                    <Users className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: superadm, cozinha, salao"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Senha</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPasswordModal(true);
+                        setForgotSuccessMessage('');
+                        setForgotUsername('');
+                      }}
+                      className="text-xs text-amber-400 hover:text-amber-300 hover:underline transition-colors font-medium"
+                    >
+                      Esqueci a senha
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-amber-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm mt-2"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Entrar no Sistema
+                </button>
+              </form>
+            </div>
+
+            {/* Modal de Recuperação de Senha */}
+            {showForgotPasswordModal && (
+              <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+                  <button
+                    onClick={() => setShowForgotPasswordModal(false)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <KeyRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Recuperar Senha</h3>
+                      <p className="text-xs text-slate-400">Solicitar redefinição de acesso</p>
+                    </div>
+                  </div>
+
+                  {forgotSuccessMessage ? (
+                    <div className="space-y-4">
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs p-3 rounded-xl flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>{forgotSuccessMessage}</span>
+                      </div>
+                      {storeInfo.whatsapp && (
+                        <a
+                          href={`https://wa.me/55${storeInfo.whatsapp.replace(/\D/g, '')}?text=Olá,%20esqueci%20minha%20senha%20do%20sistema%20(Usuário:%20${encodeURIComponent(forgotUsername)})`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
+                        >
+                          <Phone className="w-4 h-4" /> Enviar mensagem no WhatsApp do ADM
+                        </a>
+                      )}
+                      <button
+                        onClick={() => setShowForgotPasswordModal(false)}
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 rounded-xl text-xs"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const userFound = users.find(u => u.username.toLowerCase() === forgotUsername.trim().toLowerCase());
+                        if (userFound) {
+                          setForgotSuccessMessage(`Instruções registradas para o usuário "${userFound.username}". Entre em contato com o Super ADM para liberar o novo acesso.`);
+                        } else {
+                          setForgotSuccessMessage(`Solicitação iniciada. Favor contatar o administrador responsável para redefinir.`);
+                        }
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase mb-1.5">Informe seu Usuário</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Digite seu nome de usuário"
+                          value={forgotUsername}
+                          onChange={(e) => setForgotUsername(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs shadow-lg transition-all"
+                      >
+                        Solicitar Recuperação
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      const userPracaObj = pracas.find(p => p.id === sessionUser.pracaAccess);
+      const isPracaBlocked = isRestrictedUser && userPracaObj && !userPracaObj.active;
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-12 selection:bg-amber-500 selection:text-slate-950">
+          <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-amber-400 font-bold">
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <span>{sessionUser.name}</span>
+              </div>
+              <span className="text-slate-500">|</span>
+              <span className="text-slate-300 font-medium flex items-center gap-1">
+                <Store className="w-3.5 h-3.5 text-slate-400" /> {sessionUser.storeName}
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${
+                isSuperAdmin ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                isStoreAdmin ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' :
+                'bg-slate-800 text-slate-300 border-slate-700'
+              }`}>
+                {sessionUser.role}
+              </span>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-slate-400 hover:text-rose-400 font-semibold transition-colors bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Sair
+            </button>
+          </div>
+
+          <header className="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30 shadow-xl backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center space-x-3">
+                  {storeInfo.logoUrl ? (
+                    <div className="w-11 h-11 rounded-xl bg-slate-800 overflow-hidden border border-amber-500/30 flex items-center justify-center p-0.5 shadow-lg">
+                      <img src={storeInfo.logoUrl} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 font-bold">
+                      <Store className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                      {storeInfo.name}
+                    </h1>
+                    <p className="text-xs text-slate-400">Controle de Estoque & Liberacão de Praças</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 md:pb-0">
+                  {(isStoreAdmin || sessionUser.pracaAccess === 'salao') && (
+                    <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs">
+                      <Refrigerator className="w-4 h-4 text-cyan-400" />
+                      <span className="text-slate-300">Falta Salão:</span>
+                      <span className={`font-bold ${totalSalaoFalta > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {totalSalaoFalta} un
+                      </span>
+                    </div>
+                  )}
+
+                  {(isStoreAdmin || sessionUser.pracaAccess === 'cozinha') && (
+                    <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs">
+                      <UtensilsCrossed className="w-4 h-4 text-amber-400" />
+                      <span className="text-slate-300">Falta Cozinha:</span>
+                      <span className={`font-bold ${totalCozinhaFalta > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {totalCozinhaFalta} un
+                      </span>
+                    </div>
+                  )}
+
+                  {isStoreAdmin && (
+                    <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50 text-xs">
+                      <ShoppingCart className="w-4 h-4 text-emerald-400" />
+                      <span className="text-slate-300">Itens p/ Comprar:</span>
+                      <span className="font-bold text-amber-400">
+                        {missingProducts.length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            {isPracaBlocked && (
+              <div className="mb-6 bg-rose-950/40 border-2 border-rose-500/50 rounded-2xl p-6 text-center text-rose-200">
+                <ShieldAlert className="w-12 h-12 text-rose-400 mx-auto mb-2 animate-bounce" />
+                <h3 className="text-lg font-bold">Praça Temporariamente Desativada</h3>
+                <p className="text-xs text-rose-300 mt-1 max-w-md mx-auto">
+                  A praça <b>{userPracaObj.name}</b> foi bloqueada para atualização pelo Administrador.
+                </p>
+              </div>
+            )}
+
+            {!isPracaBlocked && (
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+                  {(isStoreAdmin || sessionUser.pracaAccess === 'salao') && (
+                    <button
+                      onClick={() => setActiveTab('salao')}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                        activeTab === 'salao'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                          : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <Refrigerator className="w-4 h-4" /> Conferência Salão
+                    </button>
+                  )}
+
+                  {(isStoreAdmin || sessionUser.pracaAccess === 'cozinha') && (
+                    <button
+                      onClick={() => setActiveTab('cozinha')}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                        activeTab === 'cozinha'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                          : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <UtensilsCrossed className="w-4 h-4" /> Conferência Cozinha
+                    </button>
+                  )}
+
+                  {isStoreAdmin && (
+                    <button
+                      onClick={() => setActiveTab('relatorio')}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap relative ${
+                        activeTab === 'relatorio'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                          : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <ShoppingCart className="w-4 h-4" /> Relatório de Compras
+                      {missingProducts.length > 0 && (
+                        <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${activeTab === 'relatorio' ? 'bg-slate-950 text-amber-400' : 'bg-rose-500 text-white'}`}>
+                          {missingProducts.length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setActiveTab('cadastrar')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                      activeTab === 'cadastrar'
+                        ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <PlusCircle className="w-4 h-4" /> Cadastrar Produto
+                  </button>
+
+                  {isStoreAdmin && (
+                    <button
+                      onClick={() => setActiveTab('config')}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${
+                        activeTab === 'config'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                          : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <Settings className="w-4 h-4" /> Configurações & Usuários
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!isPracaBlocked && (activeTab === 'salao' || activeTab === 'cozinha') && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+                <div className="relative md:col-span-2">
+                  <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar produto por nome ou fornecedor..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                  />
+                </div>
+
+                <div className="relative">
+                  <Filter className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+                  <select
+                    value={selectedSupplier}
+                    onChange={(e) => setSelectedSupplier(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="ALL">Todos os Fornecedores</option>
+                    {suppliers.map(sup => (
+                      <option key={sup.id} value={sup.name}>{sup.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* ABA SALÃO */}
+            {!isPracaBlocked && activeTab === 'salao' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-slate-900 p-4 rounded-xl border border-slate-800">
+                  <div>
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Refrigerator className="text-cyan-400 w-5 h-5" /> Conferência de Bebidas (Salão)
+                    </h2>
+                  </div>
+                  <span className="text-xs font-semibold px-3 py-1 bg-slate-800 text-slate-300 rounded-lg border border-slate-700">
+                    {filteredProducts.length} itens
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur shadow-2xl">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-slate-900 border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                        <th className="py-3.5 px-4">Nome do Produto</th>
+                        <th className="py-3.5 px-3 text-center">Mínimo</th>
+                        <th className="py-3.5 px-3 text-center bg-cyan-950/30 text-cyan-400 border-x border-slate-800">Geladeira</th>
+                        <th className="py-3.5 px-3 text-center bg-blue-950/30 text-blue-400 border-r border-slate-800">Depósito</th>
+                        <th className="py-3.5 px-3 text-center">Tem (Total)</th>
+                        <th className="py-3.5 px-3 text-center">Falta</th>
+                        <th className="py-3.5 px-3 text-center">Fardos p/ Comprar</th>
+                        <th className="py-3.5 px-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredProducts.map((p) => {
+                        const totalTem = p.fridge + p.deposit;
+                        const falta = p.minEstq - totalTem;
+                        const isAlert = falta > 0;
+                        const fardosComprar = (p.fardo && p.fardo > 0 && falta > 0) ? Math.ceil(falta / p.fardo) : 0;
+                        const isEditing = editingId === p.id;
+
+                        return (
+                          <tr key={p.id} className={`hover:bg-slate-800/40 transition-colors ${isAlert ? 'bg-rose-950/10' : ''}`}>
+                            <td className="py-3 px-4 font-medium text-slate-200">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={editForm.name}
+                                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                  className="bg-slate-950 border border-amber-500 rounded px-2 py-1 text-xs w-full"
+                                />
+                              ) : (
+                                <div>
+                                  <div className="font-semibold text-slate-100">{p.name}</div>
+                                  <div className="text-[11px] text-slate-400 font-normal">{p.supplier}</div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-semibold text-slate-300">
+                              {isEditing ? (
+                                <input
+                                  type="number"
+                                  value={editForm.minEstq}
+                                  onChange={(e) => setEditForm({ ...editForm, minEstq: parseFloat(e.target.value) || 0 })}
+                                  className="bg-slate-950 border border-amber-500 rounded px-1.5 py-1 text-xs w-16 text-center"
+                                />
+                              ) : p.minEstq}
+                            </td>
+                            <td className="py-2 px-3 text-center bg-cyan-950/20 border-x border-slate-800/80">
+                              <div className="flex items-center justify-center gap-1">
+                                <button onClick={() => updateProductQty(p.id, 'fridge', p.fridge - 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-cyan-600 text-slate-300 text-xs font-bold">-</button>
+                                <input type="number" value={p.fridge} onChange={(e) => updateProductQty(p.id, 'fridge', e.target.value)} className="w-12 text-center bg-slate-950 border border-slate-700 rounded py-1 text-cyan-300 font-bold" />
+                                <button onClick={() => updateProductQty(p.id, 'fridge', p.fridge + 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-cyan-600 text-slate-300 text-xs font-bold">+</button>
+                              </div>
+                            </td>
+                            <td className="py-2 px-3 text-center bg-blue-950/20 border-r border-slate-800/80">
+                              <div className="flex items-center justify-center gap-1">
+                                <button onClick={() => updateProductQty(p.id, 'deposit', p.deposit - 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-blue-600 text-slate-300 text-xs font-bold">-</button>
+                                <input type="number" value={p.deposit} onChange={(e) => updateProductQty(p.id, 'deposit', e.target.value)} className="w-12 text-center bg-slate-950 border border-slate-700 rounded py-1 text-blue-300 font-bold" />
+                                <button onClick={() => updateProductQty(p.id, 'deposit', p.deposit + 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-blue-600 text-slate-300 text-xs font-bold">+</button>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 text-center font-bold text-slate-100 text-base">{totalTem}</td>
+                            <td className="py-3 px-3 text-center">
+                              {isAlert ? (
+                                <span className="inline-flex items-center gap-1 font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md text-xs">
+                                  <AlertTriangle className="w-3 h-3" /> {falta}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md text-xs">
+                                  <CheckCircle2 className="w-3 h-3" /> OK
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              {fardosComprar > 0 ? (
+                                <span className="font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs">
+                                  {fardosComprar} fardos
+                                </span>
+                              ) : <span className="text-slate-600">-</span>}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {isEditing ? (
+                                  <>
+                                    <button onClick={saveEditing} className="p-1.5 text-emerald-400 hover:bg-slate-800 rounded"><Save className="w-4 h-4" /></button>
+                                    <button onClick={() => setEditingId(null)} className="p-1.5 text-slate-400 hover:bg-slate-800 rounded"><X className="w-4 h-4" /></button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button onClick={() => startEditing(p)} className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => handleDeleteProduct(p.id)} className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded"><Trash2 className="w-4 h-4" /></button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ABA COZINHA */}
+            {!isPracaBlocked && activeTab === 'cozinha' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-slate-900 p-4 rounded-xl border border-slate-800">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <UtensilsCrossed className="text-amber-400 w-5 h-5" /> Conferência de Insumos (Cozinha)
+                  </h2>
+                </div>
+
+                <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur shadow-2xl">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-slate-900 border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                        <th className="py-3.5 px-4">Nome do Insumo</th>
+                        <th className="py-3.5 px-4">Fornecedor</th>
+                        <th className="py-3.5 px-3 text-center">Mínimo</th>
+                        <th className="py-3.5 px-3 text-center bg-amber-950/20 text-amber-400 border-x border-slate-800">Tem</th>
+                        <th className="py-3.5 px-3 text-center">Falta</th>
+                        <th className="py-3.5 px-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredProducts.map((p) => {
+                        const falta = p.minEstq - p.currentQty;
+                        const isAlert = falta > 0;
+                        const isEditing = editingId === p.id;
+
+                        return (
+                          <tr key={p.id} className={`hover:bg-slate-800/40 transition-colors ${isAlert ? 'bg-rose-950/10' : ''}`}>
+                            <td className="py-3 px-4 font-semibold text-slate-100">
+                              {isEditing ? (
+                                <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="bg-slate-950 border border-amber-500 rounded px-2 py-1 text-xs w-full" />
+                              ) : p.name}
+                            </td>
+                            <td className="py-3 px-4 text-slate-400 text-xs">{p.supplier}</td>
+                            <td className="py-3 px-3 text-center font-semibold text-slate-300">
+                              {isEditing ? (
+                                <input type="number" step="0.1" value={editForm.minEstq} onChange={(e) => setEditForm({ ...editForm, minEstq: parseFloat(e.target.value) || 0 })} className="bg-slate-950 border border-amber-500 rounded px-1.5 py-1 text-xs w-16 text-center" />
+                              ) : p.minEstq}
+                            </td>
+                            <td className="py-2 px-3 text-center bg-amber-950/10 border-x border-slate-800/80">
+                              <div className="flex items-center justify-center gap-1">
+                                <button onClick={() => updateProductQty(p.id, 'currentQty', p.currentQty - 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-amber-500 text-slate-300 text-xs font-bold">-</button>
+                                <input type="number" step="0.1" value={p.currentQty} onChange={(e) => updateProductQty(p.id, 'currentQty', e.target.value)} className="w-16 text-center bg-slate-950 border border-slate-700 rounded py-1 text-amber-300 font-bold" />
+                                <button onClick={() => updateProductQty(p.id, 'currentQty', p.currentQty + 1)} className="w-6 h-6 rounded bg-slate-800 hover:bg-amber-500 text-slate-300 text-xs font-bold">+</button>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              {isAlert ? (
+                                <span className="inline-flex items-center gap-1 font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-md text-xs">
+                                  <AlertTriangle className="w-3.5 h-3.5" /> Falta {falta.toFixed(falta % 1 !== 0 ? 1 : 0)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md text-xs">
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> OK
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {isEditing ? (
+                                  <>
+                                    <button onClick={saveEditing} className="p-1.5 text-emerald-400 hover:bg-slate-800 rounded"><Save className="w-4 h-4" /></button>
+                                    <button onClick={() => setEditingId(null)} className="p-1.5 text-slate-400 hover:bg-slate-800 rounded"><X className="w-4 h-4" /></button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button onClick={() => startEditing(p)} className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded"><Edit2 className="w-4 h-4" /></button>
+                                    <button onClick={() => handleDeleteProduct(p.id)} className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded"><Trash2 className="w-4 h-4" /></button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ABA RELATÓRIO */}
+            {!isPracaBlocked && activeTab === 'relatorio' && isStoreAdmin && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <ShoppingCart className="text-emerald-400 w-6 h-6" /> Relatório Integrado de Compras
+                    </h2>
+                  </div>
+                  <button
+                    onClick={copyShoppingList}
+                    disabled={missingProducts.length === 0}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm shadow-lg flex items-center gap-2"
+                  >
+                    {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copiedAlert ? 'Lista Copiada!' : 'Copiar Lista de Compras'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.keys(missingBySupplier).map(supplier => (
+                    <div key={supplier} className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                      <h3 className="font-bold text-amber-400 text-sm mb-3 uppercase flex items-center gap-2">
+                        <Building2 className="w-4 h-4" /> {supplier}
+                      </h3>
+                      <ul className="divide-y divide-slate-800">
+                        {missingBySupplier[supplier].map(item => (
+                          <li key={item.id} className="py-2.5 flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-200">{item.name}</span>
+                            <span className="font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
+                              Falta: {item.falta.toFixed(item.falta % 1 !== 0 ? 1 : 0)} un
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ABA CADASTRO PRODUTO */}
+            {!isPracaBlocked && activeTab === 'cadastrar' && (
+              <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+                <h2 className="text-lg font-bold text-white mb-4">Cadastrar Novo Produto</h2>
+                <form onSubmit={handleAddProduct} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Nome do Produto *</label>
+                    <input type="text" required value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Praça *</label>
+                      <select value={newProduct.praca} onChange={(e) => setNewProduct({ ...newProduct, praca: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
+                        {pracas.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Fornecedor *</label>
+                      <select required value={newProduct.supplier} onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100">
+                        <option value="">Selecione...</option>
+                        {suppliers.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Estoque Mínimo *</label>
+                      <input type="number" step="0.1" required value={newProduct.minEstq} onChange={(e) => setNewProduct({ ...newProduct, minEstq: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100" />
+                    </div>
+                    {newProduct.praca === 'salao' && (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Unidades / Fardo</label>
+                        <input type="number" value={newProduct.fardo} onChange={(e) => setNewProduct({ ...newProduct, fardo: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100" />
+                      </div>
+                    )}
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-3 rounded-xl text-sm hover:bg-amber-400">Salvar Produto</button>
+                </form>
+              </div>
+            )}
+
+            {/* ABA CONFIGURAÇÕES */}
+            {!isPracaBlocked && activeTab === 'config' && isStoreAdmin && (
+              <div className="space-y-6 max-w-5xl mx-auto">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                  <h3 className="font-bold text-white mb-4">Gestão de Usuários</h3>
+                  <form onSubmit={handleAddUser} className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
+                    <input type="text" required placeholder="Usuário (login)" value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+                    <input type="password" required placeholder="Senha" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+                    <input type="text" required placeholder="Nome Completo" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+                    <button type="submit" className="bg-amber-500 text-slate-950 font-bold rounded-lg text-xs hover:bg-amber-400 py-2">Criar Usuário</button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
